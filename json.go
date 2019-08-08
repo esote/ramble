@@ -1,10 +1,10 @@
 package ramble
 
 type SendReq struct {
-	Sender string `json:"sender"`
+	Sender    string   `json:"sender"`
 	Recipient []string `json:"recipient"`
-	Msg string `json:"message"`
-	Guid int `json:"guid"`
+	Msg       string   `json:"message"`
+	Guid      int      `json:"guid"`
 }
 
 type SendResp struct {
@@ -17,12 +17,12 @@ type ViewReq1 struct {
 
 type ViewResp1 struct {
 	NONCE int `json:"NONCE"`
-	Guid int `json:"guid"`
+	Guid  int `json:"guid"`
 }
 
 type ViewReq2 struct {
 	SignedNONCE string `json:"signedNONCE"`
-	Guid int `json:"guid"`
+	Guid        int    `json:"guid"`
 }
 
 type ViewResp2 struct {
