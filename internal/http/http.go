@@ -9,37 +9,32 @@ import (
 	"github.com/majiru/ramble"
 )
 
-func writeStatus(status int, w http.ResponseWriter) {
-	w.WriteHeader(status)
-	w.Write([]byte(http.StatusText(status)))
-}
-
 func handleSend(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeStatus(http.StatusMethodNotAllowed, w)
+		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
 		return
 	}
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
 	req := &ramble.SendReq{}
 	if json.Unmarshal(b, req) != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
 	if req.Sender == "" {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Empty sender", http.StatusBadRequest)
 		return
 	}
 	//TODO(majiru): We also need to check that the msg is armor formated pgp message
 	if req.Msg == "" {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Empty message", http.StatusBadRequest)
 		return
 	}
 	if req.Recipient == nil || len(req.Recipient) < 1 {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Empty recipient list", http.StatusBadRequest)
 		return
 	}
 	if req.Guid == 0 {
@@ -51,7 +46,7 @@ func handleSend(w http.ResponseWriter, r *http.Request) {
 	//At this point req.Guid is filled with the correct Guid
 	b, err = json.Marshal(&ramble.SendResp{req.Guid})
 	if err != nil {
-		writeStatus(http.StatusInternalServerError, w)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 	w.Write(b)
@@ -59,28 +54,28 @@ func handleSend(w http.ResponseWriter, r *http.Request) {
 
 func handleView1(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeStatus(http.StatusMethodNotAllowed, w)
+		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
 		return
 	}
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
 	req := &ramble.ViewReq1{}
 	if json.Unmarshal(b, req) != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
 	if req.Fingerprint == "" {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Empty fingerprint", http.StatusBadRequest)
 		return
 	}
 	resp := &ramble.ViewResp1{}
 	//TODO(majiru): populate resp and note time
 	b, err = json.Marshal(resp)
 	if err != nil {
-		writeStatus(http.StatusInternalServerError, w)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 	w.Write(b)
@@ -88,26 +83,26 @@ func handleView1(w http.ResponseWriter, r *http.Request) {
 
 func handleView2(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeStatus(http.StatusMethodNotAllowed, w)
+		http.Error(w, "Bad Method", http.StatusMethodNotAllowed)
 		return
 	}
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
 	req := &ramble.ViewReq2{}
 	if json.Unmarshal(b, req) != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
 	//TODO(majiru): Verify time
 	if req.SignedNONCE == "" {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Empty NONCE", http.StatusBadRequest)
 		return
 	}
 	if req.Guid == 0 {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Invalid GUID", http.StatusBadRequest)
 		return
 	}
 	//TODO(majiru): Grab convos
@@ -115,7 +110,7 @@ func handleView2(w http.ResponseWriter, r *http.Request) {
 	resp := &ramble.ViewResp2{convos}
 	b, err = json.Marshal(resp)
 	if err != nil {
-		writeStatus(http.StatusInternalServerError, w)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 	w.Write(b)
@@ -128,34 +123,34 @@ func handleView(w http.ResponseWriter, r *http.Request) {
 	case "2":
 		handleView2(w, r)
 	default:
-		writeStatus(http.StatusNotFound, w)
+		http.Error(w, "", http.StatusNotFound)
 	}
 }
 
 func handleDelete1(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeStatus(http.StatusMethodNotAllowed, w)
+		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
 		return
 	}
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
 	req := &ramble.DeleteReq1{}
 	if json.Unmarshal(b, req) != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
 	if req.Fingerprint == "" {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Empty fingerprint", http.StatusBadRequest)
 		return
 	}
 	resp := &ramble.DeleteResp{}
 	//TODO(majiru): populate resp and note time
 	b, err = json.Marshal(resp)
 	if err != nil {
-		writeStatus(http.StatusInternalServerError, w)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 	w.Write(b)
@@ -163,30 +158,29 @@ func handleDelete1(w http.ResponseWriter, r *http.Request) {
 
 func handleDelete2(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeStatus(http.StatusMethodNotAllowed, w)
+		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
 		return
 	}
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
 	req := &ramble.DeleteReq2{}
 	if json.Unmarshal(b, req) != nil {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
 	//TODO(majiru): Verify time
 	if req.SignedNONCE == "" {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Empty NONCE", http.StatusBadRequest)
 		return
 	}
 	if req.Guid == 0 {
-		writeStatus(http.StatusBadRequest, w)
+		http.Error(w, "Invalid GUID", http.StatusBadRequest)
 		return
 	}
 	//TODO(majiru): Nuke messages
-	writeStatus(http.StatusOK, w)
 }
 
 func handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -196,6 +190,6 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 	case "2":
 		handleDelete2(w, r)
 	default:
-		writeStatus(http.StatusNotFound, w)
+		http.Error(w, "", http.StatusNotFound)
 	}
 }
