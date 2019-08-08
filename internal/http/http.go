@@ -128,10 +128,6 @@ func handleView(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDelete1(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
-		return
-	}
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Couldn't read body", http.StatusBadRequest)
@@ -157,10 +153,6 @@ func handleDelete1(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDelete2(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
-		return
-	}
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Couldn't read body", http.StatusBadRequest)
@@ -184,10 +176,10 @@ func handleDelete2(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDelete(w http.ResponseWriter, r *http.Request) {
-	switch path.Base(r.URL.String()) {
-	case "1":
+	switch r.Method {
+	case http.MethodPost:
 		handleDelete1(w, r)
-	case "2":
+	case http.MethodGet:
 		handleDelete2(w, r)
 	default:
 		http.Error(w, "", http.StatusNotFound)
