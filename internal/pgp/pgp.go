@@ -12,10 +12,8 @@ import (
 	"golang.org/x/crypto/openpgp/packet"
 )
 
-// TODO (esote): Add internal/pgp function to fetch fingerprint from public key.
-
 // TODO (esote): Add internal/pgp function to verify ASCII armored, encrypted
-// messages are really what they seem. Then the check below will not be needed.
+// messages are really what they seem.
 
 const (
 	nonceLen = 1024
@@ -24,11 +22,10 @@ const (
 	NonceHexLen = 2 * nonceLen
 )
 
-// EncryptArmored encrypts plaintext for recipients by proving a plaintext and
-// list of armored public keys. Returns an armored, encrypted PGP message.
+// EncryptArmored encrypts plaintext for one recipient by proving a plaintext
+// and an armored public key. Returns an armored, encrypted PGP message.
 //
-// The list of recipients is hidden, but the number of recipients can still be
-// determined.
+// The recipient is hidden using a speculative key ID.
 func EncryptArmored(public, plain io.Reader) ([]byte, error) {
 	key, err := openpgp.ReadArmoredKeyRing(public)
 
@@ -36,8 +33,7 @@ func EncryptArmored(public, plain io.Reader) ([]byte, error) {
 		return nil, err
 	}
 
-	// Use speculative key IDs to hide encryption recipients. Countermeasure
-	// against traffic analysis.
+	// Use speculative key IDs to countermeasure traffic analysis.
 	for _, entity := range key {
 		entity.PrimaryKey.KeyId = 0
 
@@ -88,6 +84,17 @@ func EncryptArmored(public, plain io.Reader) ([]byte, error) {
 	}
 
 	return armored.Bytes(), nil
+}
+
+// FingerprintArmored gets the fingerprint from an armored public key.
+func FingerprintArmored(public io.Reader) ([]byte, error) {
+	key, err := openpgp.ReadArmoredKeyRing(public)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return key[0].PrimaryKey.Fingerprint[:], nil
 }
 
 // NonceHex generates a random nonce encoded as hex.

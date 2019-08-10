@@ -2,6 +2,7 @@ package pgp
 
 import (
 	"bytes"
+	"encoding/hex"
 	"strings"
 	"testing"
 )
@@ -22,6 +23,29 @@ func TestEncryptArmored(t *testing.T) {
 
 	// fmt.Println(string(s))
 	_ = s
+}
+
+// TestFingerprint runs FingerprintArmored on two public keys.
+func TestFingerprint(t *testing.T) {
+	f, err := FingerprintArmored(strings.NewReader(public1))
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if hex.EncodeToString(f) != public1finger {
+		t.Error("public1 fingerprint mismatch")
+	}
+
+	f, err = FingerprintArmored(strings.NewReader(public2))
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if hex.EncodeToString(f) != public2finger {
+		t.Error("public2 fingerprint mismatch")
+	}
 }
 
 // TestNonceHex checks two consecutive, hexadecimal nonces are not the same.
@@ -136,6 +160,8 @@ OMtTR8J9hR5JATSdDTTvh94z/PWH2Q==
 =Wcjt
 -----END PGP PUBLIC KEY BLOCK-----`
 
+const public1finger = `50610008928758c1dfb62a461d70b6e76d4c764e`
+
 const public2 = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 mQINBF1M1ZYBEADR/L2o/vlZcpeK9lPQAN+vKXALdIQOW6rBevx8zK9YPz4wr9Ns
@@ -187,6 +213,8 @@ Jb0Ju2AyCTiqRqJSTNWL7XOMSu24MesD0K30KRHcXtxFW33CUjqSNaZzxJrttzH8
 xk9TQJAji2Mh3zt4/Br05nI/bw9Z0k4=
 =N1+F
 -----END PGP PUBLIC KEY BLOCK-----`
+
+const public2finger = `99b1d628859f26b9d0579f09e30446258979a2da`
 
 /*
 const private1 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
