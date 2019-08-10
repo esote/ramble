@@ -12,6 +12,11 @@ import (
 	"golang.org/x/crypto/openpgp/packet"
 )
 
+// TODO (esote): Add internal/pgp function to fetch fingerprint from public key.
+
+// TODO (esote): Add internal/pgp function to verify ASCII armored, encrypted
+// messages are really what they seem. Then the check below will not be needed.
+
 const (
 	nonceLen = 1024
 
@@ -86,17 +91,16 @@ func EncryptArmored(public, plain io.Reader) ([]byte, error) {
 }
 
 // NonceHex generates a random nonce encoded as hex.
-func NonceHex() (nonce [NonceHexLen]byte, err error) {
+func NonceHex() (nonce []byte, err error) {
 	b := make([]byte, nonceLen)
 
 	if _, err = rand.Read(b); err != nil {
 		return
 	}
 
-	h := make([]byte, NonceHexLen)
+	nonce = make([]byte, NonceHexLen)
+	_ = hex.Encode(nonce, b)
 
-	_ = hex.Encode(h, b)
-	copy(nonce[:], h[:])
 	return
 }
 

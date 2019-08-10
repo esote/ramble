@@ -7,180 +7,233 @@ import (
 	"path"
 
 	"github.com/majiru/ramble"
+	"github.com/majiru/ramble/internal/uuid"
 )
 
-func handleSend(w http.ResponseWriter, r *http.Request) {
+func handleSendHelloReq(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
 		return
 	}
+
 	b, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
-	req := &ramble.SendReq{}
-	if json.Unmarshal(b, req) != nil {
+
+	var req ramble.SendHelloReq
+
+	if json.Unmarshal(b, &req) != nil {
 		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
-	if req.Sender == "" {
-		http.Error(w, "Empty sender", http.StatusBadRequest)
-		return
-	}
-	//TODO(majiru): We also need to check that the msg is armor formated pgp message
-	if req.Msg == "" {
+
+	// TODO (esote): This should be done in the core.
+	if req.Message == "" {
 		http.Error(w, "Empty message", http.StatusBadRequest)
 		return
 	}
-	if req.Recipient == nil || len(req.Recipient) < 1 {
+
+	// TODO (esote): This should be done in the core.
+	if len(req.Recipients) == 0 {
 		http.Error(w, "Empty recipient list", http.StatusBadRequest)
 		return
 	}
-	if req.Guid == 0 {
-		//Generate new GUID
+
+	// TODO (esote): This should be done in the core. (Where the core also
+	// needs to check if Conversation doesn't exist, in which case give an
+	// error.
+	if req.Conversation == "" {
+		if req.Conversation, err = uuid.UUID(); err != nil {
+			http.Error(w, "Couldn't generate UUID", http.StatusInternalServerError)
+			return
+		}
 	}
 
-	//TODO(majiru): Store msg
+	// TODO (majiru): call core.
 
-	//At this point req.Guid is filled with the correct Guid
-	b, err = json.Marshal(&ramble.SendResp{req.Guid})
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+	var resp ramble.SendHelloResp
+
+	if n, err := ramble.NewHelloResponse(); err != nil {
+		http.Error(w, "Couldn't generate resp", http.StatusInternalServerError)
+		return
+	} else {
+		resp = ramble.SendHelloResp(*n)
+	}
+
+	if b, err = json.Marshal(&resp); err != nil {
+		http.Error(w, "Couldn't marshal send hello response", http.StatusInternalServerError)
 		return
 	}
+
 	w.Write(b)
 }
 
-func handleView1(w http.ResponseWriter, r *http.Request) {
+// TODO (esote): handleSendVerifyReq, where core is called
+
+func handleViewHelloReq(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
 		return
 	}
+
 	b, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
-	req := &ramble.ViewReq1{}
-	if json.Unmarshal(b, req) != nil {
+
+	var req ramble.ViewHelloReq
+
+	if json.Unmarshal(b, &req) != nil {
 		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
-	if req.Fingerprint == "" {
-		http.Error(w, "Empty fingerprint", http.StatusBadRequest)
+
+	// TODO (esote): call core
+
+	var resp ramble.ViewHelloResp
+
+	if n, err := ramble.NewHelloResponse(); err != nil {
+		http.Error(w, "Couldn't generate resp", http.StatusInternalServerError)
+		return
+	} else {
+		resp = ramble.ViewHelloResp(*n)
+	}
+
+	if b, err = json.Marshal(&resp); err != nil {
+		http.Error(w, "Couldn't marshal view hello response", http.StatusInternalServerError)
 		return
 	}
-	resp := &ramble.ViewResp1{}
-	//TODO(majiru): populate resp and note time
-	b, err = json.Marshal(resp)
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
+
 	w.Write(b)
 }
 
-func handleView2(w http.ResponseWriter, r *http.Request) {
+func handleViewVerifyReq(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Bad Method", http.StatusMethodNotAllowed)
 		return
 	}
+
 	b, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
-	req := &ramble.ViewReq2{}
-	if json.Unmarshal(b, req) != nil {
+
+	var req ramble.ViewVerifyReq
+
+	if json.Unmarshal(b, &req) != nil {
 		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
-	//TODO(majiru): Verify time
-	if req.SignedNONCE == "" {
-		http.Error(w, "Empty NONCE", http.StatusBadRequest)
+
+	// TODO (esote): from core: look up UUID in mapping of active UUIDs &
+	// verify time within 1 minute.
+	if req.UUID == "" {
+		http.Error(w, "Bad UUID", http.StatusBadRequest)
 		return
 	}
-	if req.Guid == 0 {
-		http.Error(w, "Invalid GUID", http.StatusBadRequest)
+
+	//TODO(majiru): call core.
+
+	var resp = ramble.ViewVerifyResp{Messages: nil}
+
+	if b, err = json.Marshal(&resp); err != nil {
+		http.Error(w, "Couldn't marshal view verify response", http.StatusInternalServerError)
 		return
 	}
-	//TODO(majiru): Grab convos
-	convos := []int{}
-	resp := &ramble.ViewResp2{convos}
-	b, err = json.Marshal(resp)
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
+
 	w.Write(b)
 }
 
 func handleView(w http.ResponseWriter, r *http.Request) {
+	// TODO (esote): fix how path is gathered: r.URL.String()[1:] string
+	// until last substring with slash, etc.
 	switch path.Base(r.URL.String()) {
-	case "1":
-		handleView1(w, r)
-	case "2":
-		handleView2(w, r)
+	case "hello":
+		handleViewHelloReq(w, r)
+	case "verify":
+		handleViewVerifyReq(w, r)
 	default:
-		http.Error(w, "", http.StatusNotFound)
+		http.Error(w, "Not found", http.StatusNotFound)
 	}
 }
 
-func handleDelete1(w http.ResponseWriter, r *http.Request) {
+func handleDeleteHelloReq(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	b, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
-	req := &ramble.DeleteReq1{}
-	if json.Unmarshal(b, req) != nil {
+
+	var req ramble.DeleteHelloReq
+
+	if json.Unmarshal(b, &req) != nil {
 		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
-	if req.Fingerprint == "" {
-		http.Error(w, "Empty fingerprint", http.StatusBadRequest)
+
+	// TODO (esote): call core.
+
+	var resp ramble.DeleteHelloResp
+
+	if n, err := ramble.NewHelloResponse(); err != nil {
+		http.Error(w, "Couldn't generate resp", http.StatusInternalServerError)
+		return
+	} else {
+		resp = ramble.DeleteHelloResp(*n)
+	}
+
+	if b, err = json.Marshal(resp); err != nil {
+		http.Error(w, "Couldn't marshal view verify response", http.StatusInternalServerError)
 		return
 	}
-	resp := &ramble.DeleteResp{}
-	//TODO(majiru): populate resp and note time
-	b, err = json.Marshal(resp)
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
+
 	w.Write(b)
 }
 
-func handleDelete2(w http.ResponseWriter, r *http.Request) {
+func handleDeleteVerifyReq(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	b, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		http.Error(w, "Couldn't read body", http.StatusBadRequest)
 		return
 	}
-	req := &ramble.DeleteReq2{}
-	if json.Unmarshal(b, req) != nil {
+
+	var req ramble.DeleteVerifyReq
+
+	if json.Unmarshal(b, &req) != nil {
 		http.Error(w, "Bad json", http.StatusBadRequest)
 		return
 	}
-	//TODO(majiru): Verify time
-	if req.SignedNONCE == "" {
-		http.Error(w, "Empty NONCE", http.StatusBadRequest)
-		return
-	}
-	if req.Guid == 0 {
-		http.Error(w, "Invalid GUID", http.StatusBadRequest)
-		return
-	}
-	//TODO(majiru): Nuke messages
+
+	// TODO(majiru): Call core, nuke messages based on initial request type
 }
 
 func handleDelete(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		handleDelete1(w, r)
-	case http.MethodGet:
-		handleDelete2(w, r)
+	// TODO (esote): fix how path is gathered: r.URL.String()[1:] string
+	// until last substring with slash, etc.
+	switch path.Base(r.URL.String()) {
+	case "handle":
+		handleDeleteHelloReq(w, r)
+	case "verify":
+		handleDeleteVerifyReq(w, r)
 	default:
 		http.Error(w, "", http.StatusNotFound)
 	}
