@@ -100,6 +100,18 @@ func TestVerifyEncryptedArmored(t *testing.T) {
 	}
 }
 
+// TestVerifyPublicArmored validates that VerifyPublicArmored works on
+// valid public keys.
+func TestVerifyPublicArmored(t *testing.T) {
+	ok, err := VerifyPublicArmored(strings.NewReader(public1))
+
+	if err != nil {
+		t.Error(err)
+	} else if !ok {
+		t.Error("public key not valid")
+	}
+}
+
 const file = `test
 file`
 

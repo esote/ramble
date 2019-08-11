@@ -151,3 +151,26 @@ func VerifyEncryptedArmored(input io.Reader) (bool, error) {
 		return false, errors.New("incorrect packet type")
 	}
 }
+
+// VerifyPublicArmored tries to validate that input is indeed an armored public
+// key.
+func VerifyPublicArmored(input io.Reader) (bool, error) {
+	blk, err := armor.Decode(input)
+
+	if err != nil {
+		return false, err
+	}
+
+	if blk.Type != openpgp.PublicKeyType {
+		return false, errors.New("incorrect block type")
+	}
+
+	p, err := packet.NewReader(blk.Body).Next()
+
+	switch p.(type) {
+	case *packet.PublicKey:
+		return true, nil
+	default:
+		return false, errors.New("incorrect packet type")
+	}
+}
