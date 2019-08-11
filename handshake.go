@@ -9,24 +9,18 @@ import (
 	"github.com/majiru/ramble/internal/uuid"
 )
 
-// MaxHVDuration is the max allowed time between the hello request and the
-// expected verify response.
-const MaxHVDuration = time.Minute
-
 func init() {
-	activeHVs = make(map[string]time.Time)
-
 	// Launch globally-persisting goroutine used to prune handshakes older
-	// than MaxHVDuration. The activeHVs value should still be checked each
-	// time since this cannot remove stale handshakes immediately.
+	// than MaxHVDuration. The activeHVs time value should still be checked
+	// since this cannot remove stale handshakes immediately.
 	go func() {
 		ticker := time.NewTicker(MaxHVDuration)
 
 		for {
 			select {
 			case now := <-ticker.C:
-				for uuid, t := range activeHVs {
-					if now.Sub(t) > MaxHVDuration {
+				for uuid, m := range activeHVs {
+					if now.Sub(m.time) > MaxHVDuration {
 						delete(activeHVs, uuid)
 					}
 				}
@@ -35,8 +29,18 @@ func init() {
 	}()
 }
 
-// Map (UUID -> Time added) of active hello-verify handshakes.
-var activeHVs map[string]time.Time
+// MaxHVDuration is the max allowed time between the hello request and the
+// expected verify response.
+const MaxHVDuration = time.Minute
+
+// Metadata needed when verifying in a hello-verify handshake.
+type verifyMeta struct {
+	nonce string
+	time  time.Time
+}
+
+// Active hello-verify handshakes.
+var activeHVs = make(map[string]verifyMeta)
 
 // HelloResponse is sent from the server indicating that it needs verification
 // before continuing.
@@ -67,13 +71,16 @@ func NewHelloResponse() (*HelloResponse, error) {
 		return nil, err
 	}
 
-	if t, ok := activeHVs[h.UUID]; ok {
-		log.Printf("UUID %s -> %s already exists in activeHVs!", h.UUID,
-			t.String())
+	if m, ok := activeHVs[h.UUID]; ok {
+		log.Printf("UUID %s -> %s already exists in activeHVs!\n",
+			h.UUID, m.time.String())
 		return nil, errors.New("the very improbable just happened")
 	}
 
-	activeHVs[h.UUID] = time.Now()
+	activeHVs[h.UUID] = verifyMeta{
+		nonce: h.Nonce,
+		time:  time.Now(),
+	}
 
 	return &h, nil
 }
