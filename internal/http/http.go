@@ -56,19 +56,21 @@ func handleSendHelloReq(w http.ResponseWriter, r *http.Request) {
 
 	var resp ramble.SendHelloResp
 
-	if n, err := ramble.NewHelloResponse(); err != nil {
+	n, err := ramble.NewHelloResponse()
+
+	if err != nil {
 		http.Error(w, "Couldn't generate resp", http.StatusInternalServerError)
 		return
-	} else {
-		resp = ramble.SendHelloResp(*n)
 	}
+
+	resp = ramble.SendHelloResp(*n)
 
 	if b, err = json.Marshal(&resp); err != nil {
 		http.Error(w, "Couldn't marshal send hello response", http.StatusInternalServerError)
 		return
 	}
 
-	w.Write(b)
+	_, _ = w.Write(b)
 }
 
 // TODO (esote): handleSendVerifyReq, where core is called
@@ -97,19 +99,21 @@ func handleViewHelloReq(w http.ResponseWriter, r *http.Request) {
 
 	var resp ramble.ViewHelloResp
 
-	if n, err := ramble.NewHelloResponse(); err != nil {
+	n, err := ramble.NewHelloResponse()
+
+	if err != nil {
 		http.Error(w, "Couldn't generate resp", http.StatusInternalServerError)
 		return
-	} else {
-		resp = ramble.ViewHelloResp(*n)
 	}
+
+	resp = ramble.ViewHelloResp(*n)
 
 	if b, err = json.Marshal(&resp); err != nil {
 		http.Error(w, "Couldn't marshal view hello response", http.StatusInternalServerError)
 		return
 	}
 
-	w.Write(b)
+	_, _ = w.Write(b)
 }
 
 func handleViewVerifyReq(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +152,7 @@ func handleViewVerifyReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(b)
+	_, _ = w.Write(b)
 }
 
 func handleView(w http.ResponseWriter, r *http.Request) {
@@ -188,19 +192,21 @@ func handleDeleteHelloReq(w http.ResponseWriter, r *http.Request) {
 
 	var resp ramble.DeleteHelloResp
 
-	if n, err := ramble.NewHelloResponse(); err != nil {
+	n, err := ramble.NewHelloResponse()
+
+	if err != nil {
 		http.Error(w, "Couldn't generate resp", http.StatusInternalServerError)
 		return
-	} else {
-		resp = ramble.DeleteHelloResp(*n)
 	}
+
+	resp = ramble.DeleteHelloResp(*n)
 
 	if b, err = json.Marshal(resp); err != nil {
 		http.Error(w, "Couldn't marshal view verify response", http.StatusInternalServerError)
 		return
 	}
 
-	w.Write(b)
+	_, _ = w.Write(b)
 }
 
 func handleDeleteVerifyReq(w http.ResponseWriter, r *http.Request) {

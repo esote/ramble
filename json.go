@@ -2,11 +2,6 @@ package ramble
 
 import "time"
 
-// TODO (esote): add a welcome struct JSON also using hello-verify handshake
-// which requests we store their public key. Using this, we no longer need them
-// to pass the full public key in send, verify, and delete, but instead just the
-// public key fingerprint.
-
 // StoredMessage is a message and its metadata.
 type StoredMessage struct {
 	// Conversation UUID.
@@ -22,25 +17,23 @@ type StoredMessage struct {
 	Time time.Time `json:"time"`
 }
 
-// HelloResponse is sent from the server indicating that it needs verification
-// before continuing.
-type HelloResponse struct {
-	// Nonce to be signed and passed to the verify request.
-	Nonce string `json:"nonce"`
-
-	// UUID to be passed to the verify request.
-	UUID string `json:"uuid"`
+// WelcomeHelloReq is sent from the client asking to add this public key to
+// storage. This is required before all other requests, since all other requests
+// initiate based on the sender's fingerprint, not full public key.
+type WelcomeHelloReq struct {
+	// Public key.
+	Public string `json:"public"`
 }
 
-// VerifyRequest is sent from the client with verification details. The
-// signature is used to verify ownership of a private key.
-type VerifyRequest struct {
-	// Signature is the detached signature of the hello response nonce.
-	Signature string `json:"sig"`
+// WelcomeHelloResp is sent by the server in response to WelcomeHelloReq.
+type WelcomeHelloResp HelloResponse
 
-	// UUID from the hello response.
-	UUID string `json:"uuid"`
-}
+// WelcomeVerifyReq is sent by the client in response to WelcomeHelloResp.
+type WelcomeVerifyReq VerifyRequest
+
+// WelcomeVerifyResp is sent by  the server in response to WelcomeVerifyReq and
+// terminates the hello-verify handshake.
+type WelcomeVerifyResp struct{}
 
 // SendHelloReq is sent by the client as the initial hello request to append a
 // message to a conversion.
@@ -56,7 +49,7 @@ type SendHelloReq struct {
 	// Recipients' public key fingerprints.
 	Recipients []string `json:"recipients"`
 
-	// Sender's public key.
+	// Sender's public key fingerprint.
 	Sender string `json:"sender"`
 }
 
@@ -73,7 +66,7 @@ type SendVerifyResp struct{}
 // ViewHelloReq is sent by the client as the initial request to view a list of
 // stored messages.
 type ViewHelloReq struct {
-	// Sender's public key.
+	// Sender's public key fingerprint.
 	Sender string `json:"sender"`
 
 	// Count of how many messages to return.
@@ -96,7 +89,7 @@ type ViewVerifyResp struct {
 // DeleteHelloReq is sent by the client as the initial request to delete stored
 // data.
 type DeleteHelloReq struct {
-	// Sender's public key.
+	// Sender's public key fingerprint.
 	Sender string `json:"sender"`
 
 	// Type of data to delete, representing an enumerated type.

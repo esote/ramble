@@ -6,6 +6,7 @@ import (
 	"github.com/esote/util/uuid"
 )
 
+// UUID generates a new UUID string.
 func UUID() (string, error) {
 	u, err := uuid.NewUUID()
 
