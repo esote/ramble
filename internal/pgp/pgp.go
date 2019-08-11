@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"io"
 
 	"golang.org/x/crypto/openpgp"
@@ -12,14 +13,13 @@ import (
 	"golang.org/x/crypto/openpgp/packet"
 )
 
-// TODO (esote): Add internal/pgp function to verify ASCII armored, encrypted
-// messages are really what they seem.
-
 const (
 	nonceLen = 1024
 
 	// NonceHexLen is the length of a hexadecimal nonce in bytes.
 	NonceHexLen = 2 * nonceLen
+
+	encType = "PGP MESSAGE"
 )
 
 // EncryptArmored encrypts plaintext for one recipient by proving a plaintext
@@ -69,7 +69,7 @@ func EncryptArmored(public, plain io.Reader) ([]byte, error) {
 
 	var armored bytes.Buffer
 
-	wc, err = armor.Encode(&armored, "PGP MESSAGE", nil)
+	wc, err = armor.Encode(&armored, encType, nil)
 
 	if err != nil {
 		return nil, err
@@ -123,4 +123,31 @@ func VerifyArmoredSig(public, sig, file io.Reader) (bool, error) {
 	_, err = openpgp.CheckArmoredDetachedSignature(k, file, sig)
 
 	return err == nil, err
+}
+
+// VerifyEncryptedArmored tries to validate that input is indeed an armored,
+// encrypted PGP message.
+func VerifyEncryptedArmored(input io.Reader) (bool, error) {
+	blk, err := armor.Decode(input)
+
+	if err != nil {
+		return false, err
+	}
+
+	if blk.Type != encType {
+		return false, errors.New("incorrect block type")
+	}
+
+	p, err := packet.NewReader(blk.Body).Next()
+
+	if err != nil {
+		return false, err
+	}
+
+	switch p.(type) {
+	case *packet.EncryptedKey:
+		return true, nil
+	default:
+		return false, errors.New("incorrect packet type")
+	}
 }

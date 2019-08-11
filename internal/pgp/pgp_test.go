@@ -88,6 +88,18 @@ func TestVerifyArmoredSig(t *testing.T) {
 	}
 }
 
+// TestVerifyEncryptedArmored validates that VerifyEncryptedArmored works on
+// valid, encrypted messages.
+func TestVerifyEncryptedArmored(t *testing.T) {
+	ok, err := VerifyEncryptedArmored(strings.NewReader(enc))
+
+	if err != nil {
+		t.Error(err)
+	} else if !ok {
+		t.Error("encypted message not valid")
+	}
+}
+
 const file = `test
 file`
 
@@ -107,6 +119,24 @@ wrCA9YSDnCUZNk5tag8c65h5ofAvQ7aRUPopen7n+x0ti/OK77Z4ngPgRVX72qNI
 /LF1Ftw7Va7r7xY4BRbYuvxID0opqLYrqbEn8cONlxqgpw3dWh4=
 =OTaS
 -----END PGP SIGNATURE-----`
+
+const enc = `-----BEGIN PGP MESSAGE-----
+
+wcFMAwAAAAAAAAAAARAAcfrlHUzCyPDgyH1JgFxUYDcIdvRn8OK4y4KLtwo7NsDi
+drwWk1Kny0qWboGnNVdp/Egf/AaQOgU7qvy4L2cDv4xi1eQDl4GtiS0+g8FKkfEH
+Om9ET7L31BOtrhdiJeFbvsSeSv0lAyl9ZvB79s3JKOK40w34jiZKSjM7nlRSCtdV
+clZfHfWZ7wrHuhW7cmYmGn+OX9XODGkpAjneXAdJtQcRRkxNGB/FMzjye56J3/y/
+Id3wJAzLPr2UFD2OA+pe2cvzBtGXgUruzKnhSqxhTCW2yw0/HLAC0/e+8SASbGRy
+dcog2F4B1q9qhZVkRZ3KJplmnNhg6oG8wDPKnssyUJbN5sBTIkiMeumVI/zeJfci
+5MuSgs/2LcofBEX96Nh5cYRPW6WbtvzBxgf5VE+jX1e6GrXMH5u/mmz+aPIOvgIs
+Bcz2BodqbGxVSX7WHsCseW4Ek6kjuqedLirhICsDfrzf+uGrLys9oiE4qIeoLJda
+85rsCZL3Zrn3lIitIct0Dkv/2Q/5N7bwkY5zfms705tbOFI/4OjFO7xlVYmk6Fo9
+Qb7HF4XUemX4Or4OwGfT1kFl7qpam8t+Hsgxtn6yh8DJHJ5GsTCtAXHY0xjTIUcv
+UQsPQXt0RXz9WPpEe+VuD8As6av7jiMSc1VvF4bvMrDR5L3qugOqXM/qL/T2V3LS
+4AHkyHw9VKr0+IT31+4XQmaRReHTseBy4EDhZUPgMOI8mVEA4Bzjb7e1WGFUQG7g
+IuDb4JvkHD+c4XynVHY8cgCo5JgP/uIbOKhr4VIbAA==
+=xpRs
+-----END PGP MESSAGE-----`
 
 const public1 = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
