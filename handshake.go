@@ -14,13 +14,13 @@ func init() {
 	// than MaxHVDuration. The activeHVs time value should still be checked
 	// since this cannot remove stale handshakes immediately.
 	go func() {
-		ticker := time.NewTicker(MaxHVDuration)
+		ticker := time.NewTicker(maxHVDur)
 
 		for {
 			select {
 			case now := <-ticker.C:
 				for uuid, m := range activeHVs {
-					if now.Sub(m.time) > MaxHVDuration {
+					if now.UTC().Sub(m.time) > maxHVDur {
 						delete(activeHVs, uuid)
 					}
 				}
@@ -29,9 +29,8 @@ func init() {
 	}()
 }
 
-// MaxHVDuration is the max allowed time between the hello request and the
-// expected verify response.
-const MaxHVDuration = time.Minute
+// Max allowed time between the hello request and the expected verify response.
+const maxHVDur = time.Minute
 
 // Metadata needed when verifying in a hello-verify handshake.
 type verifyMeta struct {
@@ -79,7 +78,7 @@ func NewHelloResponse() (*HelloResponse, error) {
 
 	activeHVs[h.UUID] = verifyMeta{
 		nonce: h.Nonce,
-		time:  time.Now(),
+		time:  time.Now().UTC(),
 	}
 
 	return &h, nil
