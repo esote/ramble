@@ -1,8 +1,6 @@
 package ramble
 
 import (
-	"errors"
-	"log"
 	"time"
 
 	"github.com/majiru/ramble/internal/pgp"
@@ -11,8 +9,8 @@ import (
 
 func init() {
 	// Launch globally-persisting goroutine used to prune handshakes older
-	// than MaxHVDuration. The activeHVs time value should still be checked
-	// since this cannot remove stale handshakes immediately.
+	// than MaxHVDur. The activeHVs time value should still be checked since
+	// this cannot remove stale handshakes immediately.
 	go func() {
 		ticker := time.NewTicker(maxHVDur)
 
@@ -32,10 +30,11 @@ func init() {
 // Max allowed time between the hello request and the expected verify response.
 const maxHVDur = time.Minute
 
-// Metadata needed when verifying in a hello-verify handshake.
+// Metadata used when verifying and proceeding in a hello-verify handshake.
 type verifyMeta struct {
-	nonce string
-	time  time.Time
+	nonce   string
+	request interface{}
+	time    time.Time
 }
 
 // Active hello-verify handshakes.
@@ -68,17 +67,6 @@ func NewHelloResponse() (*HelloResponse, error) {
 
 	if err != nil {
 		return nil, err
-	}
-
-	if m, ok := activeHVs[h.UUID]; ok {
-		log.Printf("UUID %s -> %s already exists in activeHVs!\n",
-			h.UUID, m.time.String())
-		return nil, errors.New("the very improbable just happened")
-	}
-
-	activeHVs[h.UUID] = verifyMeta{
-		nonce: h.Nonce,
-		time:  time.Now().UTC(),
 	}
 
 	return &h, nil

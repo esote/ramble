@@ -10,6 +10,10 @@ import (
 	"github.com/majiru/ramble/internal/uuid"
 )
 
+func writeError(w http.ResponseWriter, status int) {
+	http.Error(w, http.StatusText(status), status)
+}
+
 func handleSendHelloReq(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
@@ -143,7 +147,7 @@ func handleViewVerifyReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO(majiru): call core.
+	// TODO (majiru): call core.
 
 	var resp = ramble.ViewVerifyResp{Messages: nil}
 
@@ -156,8 +160,6 @@ func handleViewVerifyReq(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleView(w http.ResponseWriter, r *http.Request) {
-	// TODO (esote): fix how path is gathered: r.URL.String()[1:] string
-	// until last substring with slash, etc.
 	switch path.Base(r.URL.String()) {
 	case "hello":
 		handleViewHelloReq(w, r)
@@ -229,14 +231,12 @@ func handleDeleteVerifyReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO(majiru): Call core, nuke messages based on initial request type
+	// TODO (majiru): Call core, nuke messages based on initial request type
 }
 
 func handleDelete(w http.ResponseWriter, r *http.Request) {
-	// TODO (esote): fix how path is gathered: r.URL.String()[1:] string
-	// until last substring with slash, etc.
 	switch path.Base(r.URL.String()) {
-	case "handle":
+	case "hello":
 		handleDeleteHelloReq(w, r)
 	case "verify":
 		handleDeleteVerifyReq(w, r)
