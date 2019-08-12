@@ -7,77 +7,11 @@ import (
 	"path"
 
 	"github.com/majiru/ramble"
-	"github.com/majiru/ramble/internal/uuid"
 )
 
 func writeError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
-
-func handleSendHelloReq(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Bad method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	b, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		http.Error(w, "Couldn't read body", http.StatusBadRequest)
-		return
-	}
-
-	var req ramble.SendHelloReq
-
-	if json.Unmarshal(b, &req) != nil {
-		http.Error(w, "Bad json", http.StatusBadRequest)
-		return
-	}
-
-	// TODO (esote): This should be done in the core.
-	if req.Message == "" {
-		http.Error(w, "Empty message", http.StatusBadRequest)
-		return
-	}
-
-	// TODO (esote): This should be done in the core.
-	if len(req.Recipients) == 0 {
-		http.Error(w, "Empty recipient list", http.StatusBadRequest)
-		return
-	}
-
-	// TODO (esote): This should be done in the core. (Where the core also
-	// needs to check if Conversation doesn't exist, in which case give an
-	// error.
-	if req.Conversation == "" {
-		if req.Conversation, err = uuid.UUID(); err != nil {
-			http.Error(w, "Couldn't generate UUID", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// TODO (majiru): call core.
-
-	var resp ramble.SendHelloResp
-
-	n, err := ramble.NewHelloResponse()
-
-	if err != nil {
-		http.Error(w, "Couldn't generate resp", http.StatusInternalServerError)
-		return
-	}
-
-	resp = ramble.SendHelloResp(*n)
-
-	if b, err = json.Marshal(&resp); err != nil {
-		http.Error(w, "Couldn't marshal send hello response", http.StatusInternalServerError)
-		return
-	}
-
-	_, _ = w.Write(b)
-}
-
-// TODO (esote): handleSendVerifyReq, where core is called
 
 func handleViewHelloReq(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {

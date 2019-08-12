@@ -46,7 +46,7 @@ func WelcomeHello(w *WelcomeHelloReq) (*WelcomeHelloResp, error) {
 	if m, ok := activeHVs[response.UUID]; ok {
 		log.Printf("welcome: %s -> %s already exists in activeHVs!\n",
 			response.UUID, m.time.String())
-		return nil, errors.New("the impossible just happened")
+		return nil, errors.New("the very improbable just happened")
 	}
 
 	activeHVs[response.UUID] = verifyMeta{
@@ -67,6 +67,8 @@ func WelcomeVerify(w *WelcomeVerifyReq) (*WelcomeVerifyResp, error) {
 	if !ok {
 		return nil, errors.New("no handshake with UUID")
 	}
+
+	delete(activeHVs, w.UUID)
 
 	if time.Now().UTC().Sub(m.time) > maxHVDur {
 		return nil, errors.New("handshake expired")

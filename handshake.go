@@ -30,7 +30,7 @@ func init() {
 // Max allowed time between the hello request and the expected verify response.
 const maxHVDur = time.Minute
 
-// Metadata used when verifying and proceeding in a hello-verify handshake.
+// Metadata used in the verify step of a hello-verify handshake.
 type verifyMeta struct {
 	nonce   string
 	request interface{}
@@ -38,6 +38,8 @@ type verifyMeta struct {
 }
 
 // Active hello-verify handshakes.
+// TODO (esote): This map is accessed without mutex locks, likely has race
+// conditions.
 var activeHVs = make(map[string]verifyMeta)
 
 // HelloResponse is sent from the server indicating that it needs verification
