@@ -15,7 +15,7 @@ func TestEncryptArmored(t *testing.T) {
 	s, err := EncryptArmored(rPublic, rFile)
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	// Manually decrypt this with private2. Not worth writing code to
@@ -30,21 +30,21 @@ func TestFingerprint(t *testing.T) {
 	f, err := FingerprintArmored(strings.NewReader(public1))
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if hex.EncodeToString(f) != public1finger {
-		t.Error("public1 fingerprint mismatch")
+		t.Fatal("public1 fingerprint mismatch")
 	}
 
 	f, err = FingerprintArmored(strings.NewReader(public2))
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if hex.EncodeToString(f) != public2finger {
-		t.Error("public2 fingerprint mismatch")
+		t.Fatal("public2 fingerprint mismatch")
 	}
 }
 
@@ -53,17 +53,17 @@ func TestNonceHex(t *testing.T) {
 	n1, err := NonceHex()
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	n2, err := NonceHex()
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if bytes.Equal(n1[:], n2[:]) {
-		t.Error("same nonces")
+		t.Fatal("same nonces")
 	}
 }
 
@@ -82,9 +82,9 @@ func TestVerifyArmoredSig(t *testing.T) {
 	rFile := strings.NewReader(file)
 
 	if ok, err := VerifyArmoredSig(rPublic, rSig, rFile); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	} else if !ok {
-		t.Error("not ok")
+		t.Fatal("not ok")
 	}
 }
 
@@ -94,9 +94,9 @@ func TestVerifyEncryptedArmored(t *testing.T) {
 	ok, err := VerifyEncryptedArmored(strings.NewReader(enc))
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	} else if !ok {
-		t.Error("encypted message not valid")
+		t.Fatal("encypted message not valid")
 	}
 }
 
@@ -106,9 +106,9 @@ func TestVerifyPublicArmored(t *testing.T) {
 	ok, err := VerifyPublicArmored(strings.NewReader(public1))
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	} else if !ok {
-		t.Error("public key not valid")
+		t.Fatal("public key not valid")
 	}
 }
 
