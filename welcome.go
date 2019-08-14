@@ -2,7 +2,6 @@ package ramble
 
 import (
 	"errors"
-	"log"
 	"strings"
 	"time"
 
@@ -37,25 +36,13 @@ func WelcomeHello(w *WelcomeHelloReq) (*WelcomeHelloResp, error) {
 		return nil, errors.New("input not a public key")
 	}
 
-	response, err := NewHelloResponse()
+	resp, err := NewHelloResponse(w)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if m, ok := activeHVs[response.UUID]; ok {
-		log.Printf("welcome: %s -> %s already exists in activeHVs!\n",
-			response.UUID, m.time.String())
-		return nil, errors.New("the very improbable just happened")
-	}
-
-	activeHVs[response.UUID] = verifyMeta{
-		nonce:   response.Nonce,
-		request: w,
-		time:    time.Now().UTC(),
-	}
-
-	ret := WelcomeHelloResp(*response)
+	ret := WelcomeHelloResp(*resp)
 
 	return &ret, nil
 }

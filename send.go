@@ -2,7 +2,6 @@ package ramble
 
 import (
 	"errors"
-	"log"
 	"strings"
 	"time"
 
@@ -51,25 +50,13 @@ func SendHello(s *SendHelloReq) (*SendHelloResp, error) {
 		return nil, errors.New("message is not encrypted and armored")
 	}
 
-	response, err := NewHelloResponse()
+	resp, err := NewHelloResponse(s)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if m, ok := activeHVs[response.UUID]; ok {
-		log.Printf("send: %s -> %s already exists in activeHVs!\n",
-			response.UUID, m.time.String())
-		return nil, errors.New("the very improbable just happened")
-	}
-
-	activeHVs[response.UUID] = verifyMeta{
-		nonce:   response.Nonce,
-		request: s,
-		time:    time.Now().UTC(),
-	}
-
-	ret := SendHelloResp(*response)
+	ret := SendHelloResp(*resp)
 
 	return &ret, nil
 }

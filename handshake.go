@@ -1,6 +1,8 @@
 package ramble
 
 import (
+	"errors"
+	"log"
 	"time"
 
 	"github.com/majiru/ramble/internal/pgp"
@@ -52,9 +54,9 @@ type HelloResponse struct {
 	UUID string `json:"uuid"`
 }
 
-// NewHelloResponse generates a hello response with nonce and UUID, then adds it
-// to the active hello-verify handshakes map.
-func NewHelloResponse() (*HelloResponse, error) {
+// NewHelloResponse generates a hello response and adds it to the active
+// hello-verify handshakes map.
+func NewHelloResponse(request interface{}) (*HelloResponse, error) {
 	var h HelloResponse
 
 	b, err := pgp.NonceHex()
@@ -69,6 +71,18 @@ func NewHelloResponse() (*HelloResponse, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if m, ok := activeHVs[h.UUID]; ok {
+		log.Printf("%s -> %s already exists in activeHVs!\n",
+			h.UUID, m.time.String())
+		return nil, errors.New("the very improbable just happened")
+	}
+
+	activeHVs[h.UUID] = verifyMeta{
+		nonce:   h.Nonce,
+		request: request,
+		time:    time.Now().UTC(),
 	}
 
 	return &h, nil

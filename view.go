@@ -2,12 +2,26 @@ package ramble
 
 import (
 	"errors"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/majiru/ramble/internal/pgp"
 )
+
+// StoredMessage is a message and its metadata.
+type StoredMessage struct {
+	// Conversation UUID.
+	Conversation string `json:"conv"`
+
+	// Encrypted message.
+	Message string `json:"msg"`
+
+	// Recipients' public key fingerprints.
+	Recipients []string `json:"recipients"`
+
+	// Time the message was sent.
+	Time time.Time `json:"time"`
+}
 
 // ViewHelloReq is sent by the client as the initial request to view a list of
 // stored messages.
@@ -38,25 +52,13 @@ func ViewHello(v *ViewHelloReq) (*ViewHelloResp, error) {
 		return nil, errors.New("view count <= 0")
 	}
 
-	response, err := NewHelloResponse()
+	resp, err := NewHelloResponse(v)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if m, ok := activeHVs[response.UUID]; ok {
-		log.Printf("view: %s -> %s already exists in activeHVs!\n",
-			response.UUID, m.time.String())
-		return nil, errors.New("the very improbable just happened")
-	}
-
-	activeHVs[response.UUID] = verifyMeta{
-		nonce:   response.Nonce,
-		request: v,
-		time:    time.Now().UTC(),
-	}
-
-	ret := ViewHelloResp(*response)
+	ret := ViewHelloResp(*resp)
 
 	return &ret, nil
 }
