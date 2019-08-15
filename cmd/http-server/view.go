@@ -1,31 +1,14 @@
-package http
+package main
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"path"
 
 	"github.com/majiru/ramble"
 )
 
-func handleSend(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		writeError(w, http.StatusMethodNotAllowed)
-		return
-	}
-
-	switch path.Base(r.URL.String()) {
-	case "hello":
-		handleSendHelloReq(w, r)
-	case "verify":
-		handleSendVerifyReq(w, r)
-	default:
-		writeError(w, http.StatusNotFound)
-	}
-}
-
-func handleSendHelloReq(w http.ResponseWriter, r *http.Request) {
+func handleViewHello(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -33,14 +16,14 @@ func handleSendHelloReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req ramble.SendHelloReq
+	var req ramble.ViewHelloReq
 
 	if json.Unmarshal(b, &req) != nil {
 		writeError(w, http.StatusBadRequest)
 		return
 	}
 
-	resp, err := ramble.SendHello(&req)
+	resp, err := ramble.ViewHello(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)
@@ -55,7 +38,7 @@ func handleSendHelloReq(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
-func handleSendVerifyReq(w http.ResponseWriter, r *http.Request) {
+func handleViewVerify(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -63,14 +46,14 @@ func handleSendVerifyReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req ramble.SendVerifyReq
+	var req ramble.ViewVerifyReq
 
 	if json.Unmarshal(b, &req) != nil {
 		writeError(w, http.StatusBadRequest)
 		return
 	}
 
-	resp, err := ramble.SendVerify(&req)
+	resp, err := ramble.ViewVerify(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)

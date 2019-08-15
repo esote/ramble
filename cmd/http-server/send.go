@@ -1,31 +1,14 @@
-package http
+package main
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"path"
 
 	"github.com/majiru/ramble"
 )
 
-func handleDelete(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		writeError(w, http.StatusMethodNotAllowed)
-		return
-	}
-
-	switch path.Base(r.URL.String()) {
-	case "hello":
-		handleDeleteHelloReq(w, r)
-	case "verify":
-		handleDeleteVerifyReq(w, r)
-	default:
-		writeError(w, http.StatusNotFound)
-	}
-}
-
-func handleDeleteHelloReq(w http.ResponseWriter, r *http.Request) {
+func handleSendHello(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -33,14 +16,14 @@ func handleDeleteHelloReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req ramble.DeleteHelloReq
+	var req ramble.SendHelloReq
 
 	if json.Unmarshal(b, &req) != nil {
 		writeError(w, http.StatusBadRequest)
 		return
 	}
 
-	resp, err := ramble.DeleteHello(&req)
+	resp, err := ramble.SendHello(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)
@@ -55,7 +38,7 @@ func handleDeleteHelloReq(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
-func handleDeleteVerifyReq(w http.ResponseWriter, r *http.Request) {
+func handleSendVerify(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -63,14 +46,14 @@ func handleDeleteVerifyReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req ramble.DeleteVerifyReq
+	var req ramble.SendVerifyReq
 
 	if json.Unmarshal(b, &req) != nil {
 		writeError(w, http.StatusBadRequest)
 		return
 	}
 
-	resp, err := ramble.DeleteVerify(&req)
+	resp, err := ramble.SendVerify(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)
