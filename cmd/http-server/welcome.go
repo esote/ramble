@@ -23,7 +23,7 @@ func handleWelcomeHello(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := ramble.WelcomeHello(&req)
+	resp, err := srv.WelcomeHello(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)
@@ -53,7 +53,7 @@ func handleWelcomeVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := ramble.WelcomeVerify(&req)
+	resp, err := srv.WelcomeVerify(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)

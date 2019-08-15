@@ -23,7 +23,7 @@ func handleSendHello(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := ramble.SendHello(&req)
+	resp, err := srv.SendHello(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)
@@ -53,7 +53,7 @@ func handleSendVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := ramble.SendVerify(&req)
+	resp, err := srv.SendVerify(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)

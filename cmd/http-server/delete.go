@@ -23,7 +23,7 @@ func handleDeleteHello(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := ramble.DeleteHello(&req)
+	resp, err := srv.DeleteHello(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)
@@ -53,7 +53,7 @@ func handleDeleteVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := ramble.DeleteVerify(&req)
+	resp, err := srv.DeleteVerify(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)

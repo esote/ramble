@@ -23,7 +23,7 @@ func handleViewHello(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := ramble.ViewHello(&req)
+	resp, err := srv.ViewHello(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)
@@ -53,7 +53,7 @@ func handleViewVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := ramble.ViewVerify(&req)
+	resp, err := srv.ViewVerify(&req)
 
 	if err != nil {
 		writeError(w, http.StatusBadRequest)

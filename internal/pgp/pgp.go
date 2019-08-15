@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"regexp"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/armor"
@@ -14,12 +15,12 @@ import (
 )
 
 const (
-	nonceLen = 1024
+	encType           = "PGP MESSAGE"
+	fingerprintHexLen = 2 * 20
+	nonceLen          = 1024
 
 	// NonceHexLen is the length of a hexadecimal nonce in bytes.
 	NonceHexLen = 2 * nonceLen
-
-	encType = "PGP MESSAGE"
 )
 
 // EncryptArmored encrypts plaintext for one recipient by proving a plaintext
@@ -150,6 +151,15 @@ func VerifyEncryptedArmored(input io.Reader) (bool, error) {
 	default:
 		return false, errors.New("incorrect packet type")
 	}
+}
+
+var reHex = regexp.MustCompile("^[a-fA-F0-9]+$")
+
+// VerifyHexFingerprint does rough checks to see if the input fingerprint is
+// valid.
+func VerifyHexFingerprint(fingerprint string) bool {
+	return len(fingerprint) == fingerprintHexLen &&
+		reHex.MatchString(fingerprint)
 }
 
 // VerifyPublicArmored tries to validate that input is indeed an armored public
