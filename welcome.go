@@ -1,6 +1,7 @@
 package ramble
 
 import (
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
@@ -77,7 +78,20 @@ func WelcomeVerify(w *WelcomeVerifyReq) (*WelcomeVerifyResp, error) {
 		return nil, errors.New("signature did not match public key")
 	}
 
-	// TODO: store public key, if it already exists overwrite it.
+	// Reset reader.
+	public = strings.NewReader(hello.Public)
+
+	fingerprint, err := pgp.FingerprintArmored(public)
+
+	if err != nil {
+		return nil, errors.New("unable to get public key fingerprint")
+	}
+
+	err = pub.Write(hex.EncodeToString(fingerprint), []byte(hello.Public))
+
+	if err != nil {
+		return nil, err
+	}
 
 	return new(WelcomeVerifyResp), nil
 }
