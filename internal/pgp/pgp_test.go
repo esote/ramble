@@ -81,10 +81,8 @@ func TestVerifyArmoredSig(t *testing.T) {
 	rSig := strings.NewReader(sig)
 	rFile := strings.NewReader(file)
 
-	if ok, err := VerifyArmoredSig(rPublic, rSig, rFile); err != nil {
+	if _, err := VerifyArmoredSig(rPublic, rSig, rFile); err != nil {
 		t.Fatal(err)
-	} else if !ok {
-		t.Fatal("not ok")
 	}
 }
 

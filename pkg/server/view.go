@@ -1,10 +1,8 @@
 package server
 
 import (
-	"bytes"
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/majiru/ramble"
 	"github.com/majiru/ramble/internal/pgp"
@@ -22,7 +20,7 @@ func (s *Server) ViewHello(req *ramble.ViewHelloReq) (*ramble.ViewHelloResp, err
 		return nil, errors.New("view count <= 0")
 	}
 
-	resp, err := s.NewHelloResponse(req)
+	resp, err := s.newHelloResponse(req)
 
 	if err != nil {
 		return nil, err
@@ -35,41 +33,26 @@ func (s *Server) ViewHello(req *ramble.ViewHelloReq) (*ramble.ViewHelloResp, err
 
 // ViewVerify processes the verify handshake step.
 func (s *Server) ViewVerify(req *ramble.ViewVerifyReq) (*ramble.ViewVerifyResp, error) {
-	s.mu.Lock()
-	m, ok := s.active[req.UUID]
-
-	if !ok {
-		s.mu.Unlock()
-		return nil, errors.New("no handshake with UUID")
-	}
-
-	delete(s.active, req.UUID)
-	s.mu.Unlock()
-
-	if time.Now().UTC().Sub(m.time) > s.dur {
-		return nil, errors.New("handshake expired")
-	}
-
-	hello, ok := m.request.(*ramble.ViewHelloReq)
-
-	if !ok {
-		return nil, errors.New("request was not ViewHelloReq")
-	}
-
-	publicBody, err := s.public.Read(hello.Sender)
+	meta, err := s.verifyReq(req.UUID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	public := bytes.NewReader(publicBody)
-	sig := strings.NewReader(req.Signature)
-	nonce := strings.NewReader(m.nonce)
+	hello, ok := meta.request.(*ramble.ViewHelloReq)
 
-	if ok, err := pgp.VerifyArmoredSig(public, sig, nonce); err != nil {
+	if !ok {
+		return nil, errors.New("request was not ViewHelloReq")
+	}
+
+	public, err := s.public.Read(hello.Sender)
+
+	if err != nil {
 		return nil, err
-	} else if !ok {
-		return nil, errors.New("signature did not match public key")
+	}
+
+	if err = s.verifyReqSig(public, req.Signature, meta.nonce); err != nil {
+		return nil, err
 	}
 
 	// TODO: return index of messages sent by user and sent to user

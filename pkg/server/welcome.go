@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/majiru/ramble"
 	"github.com/majiru/ramble/internal/pgp"
@@ -20,7 +19,7 @@ func (s *Server) WelcomeHello(req *ramble.WelcomeHelloReq) (*ramble.WelcomeHello
 		return nil, errors.New("input not a public key")
 	}
 
-	resp, err := s.NewHelloResponse(req)
+	resp, err := s.newHelloResponse(req)
 
 	if err != nil {
 		return nil, err
@@ -33,40 +32,25 @@ func (s *Server) WelcomeHello(req *ramble.WelcomeHelloReq) (*ramble.WelcomeHello
 
 // WelcomeVerify processes the verify handshake step.
 func (s *Server) WelcomeVerify(req *ramble.WelcomeVerifyReq) (*ramble.WelcomeVerifyResp, error) {
-	s.mu.Lock()
-	m, ok := s.active[req.UUID]
+	meta, err := s.verifyReq(req.UUID)
 
-	if !ok {
-		s.mu.Unlock()
-		return nil, errors.New("no handshake with UUID")
+	if err != nil {
+		return nil, err
 	}
 
-	delete(s.active, req.UUID)
-	s.mu.Unlock()
-
-	if time.Now().UTC().Sub(m.time) > s.dur {
-		return nil, errors.New("handshake expired")
-	}
-
-	hello, ok := m.request.(*ramble.WelcomeHelloReq)
+	hello, ok := meta.request.(*ramble.WelcomeHelloReq)
 
 	if !ok {
 		return nil, errors.New("request was not WelcomeHelloReq")
 	}
 
-	public := strings.NewReader(hello.Public)
-	sig := strings.NewReader(req.Signature)
-	nonce := strings.NewReader(m.nonce)
+	err = s.verifyReqSig([]byte(hello.Public), req.Signature, meta.nonce)
 
-	if ok, err := pgp.VerifyArmoredSig(public, sig, nonce); err != nil {
+	if err != nil {
 		return nil, err
-	} else if !ok {
-		return nil, errors.New("signature did not match public key")
 	}
 
-	// Reset reader.
-	public = strings.NewReader(hello.Public)
-
+	public := strings.NewReader(hello.Public)
 	fingerprint, err := pgp.FingerprintArmored(public)
 
 	if err != nil {

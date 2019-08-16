@@ -7,7 +7,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"io/ioutil"
 	"regexp"
+	"time"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/armor"
@@ -113,17 +115,52 @@ func NonceHex() (nonce []byte, err error) {
 }
 
 // VerifyArmoredSig uses an armored public key to verify an armored, detached
-// signature.
-func VerifyArmoredSig(public, sig, file io.Reader) (bool, error) {
+// signature. Returns the signature creation time.
+func VerifyArmoredSig(public, sig, file io.Reader) (t time.Time, err error) {
 	k, err := openpgp.ReadArmoredKeyRing(public)
 
 	if err != nil {
-		return false, err
+		return
 	}
 
-	_, err = openpgp.CheckArmoredDetachedSignature(k, file, sig)
+	// Read into buffer since we need to read it twice.
+	buffer, err := ioutil.ReadAll(sig)
 
-	return err == nil, err
+	if err != nil {
+		return
+	}
+
+	reader := bytes.NewReader(buffer)
+
+	// Takes care of the actual signature validation.
+	_, err = openpgp.CheckArmoredDetachedSignature(k, file, reader)
+
+	if err != nil {
+		return
+	}
+
+	reader = bytes.NewReader(buffer)
+	blk, err := armor.Decode(reader)
+
+	if err != nil {
+		return
+	}
+
+	p, err := packet.NewReader(blk.Body).Next()
+
+	if err != nil {
+		return
+	}
+
+	// Return the signature creation time.
+	switch sig := p.(type) {
+	case *packet.Signature:
+		return sig.CreationTime, nil
+	case *packet.SignatureV3:
+		return sig.CreationTime, nil
+	default:
+		return t, errors.New("incorrect packet type")
+	}
 }
 
 // VerifyEncryptedArmored tries to validate that input is indeed an armored,

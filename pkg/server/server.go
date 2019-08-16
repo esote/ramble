@@ -1,8 +1,11 @@
+// Package server implements a ramble server.
 package server
 
 import (
+	"bytes"
 	"errors"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -66,9 +69,8 @@ func (s *Server) prune() {
 	}
 }
 
-// NewHelloResponse generates a hello response and adds it to the active
-// handshake map.
-func (s *Server) NewHelloResponse(request interface{}) (*ramble.HelloResponse, error) {
+// Generates a hello response and adds it to the active handshake map.
+func (s *Server) newHelloResponse(request interface{}) (*ramble.HelloResponse, error) {
 	var h ramble.HelloResponse
 
 	b, err := pgp.NonceHex()
@@ -101,4 +103,41 @@ func (s *Server) NewHelloResponse(request interface{}) (*ramble.HelloResponse, e
 	}
 
 	return &h, nil
+}
+
+func (s *Server) verifyReq(uuid string) (*verifyMeta, error) {
+	s.mu.Lock()
+	v, ok := s.active[uuid]
+
+	if !ok {
+		s.mu.Unlock()
+		return nil, errors.New("no handshake with UUID")
+	}
+
+	delete(s.active, uuid)
+	s.mu.Unlock()
+
+	if time.Now().UTC().Sub(v.time) > s.dur {
+		return nil, errors.New("handshake expired")
+	}
+
+	return &v, nil
+}
+
+func (s *Server) verifyReqSig(public []byte, sig, nonce string) error {
+	p := bytes.NewReader(public)
+	sr := strings.NewReader(sig)
+	n := strings.NewReader(nonce)
+
+	t, err := pgp.VerifyArmoredSig(p, sr, n)
+
+	if err != nil {
+		return err
+	}
+
+	if time.Now().UTC().Sub(t) > s.dur {
+		return errors.New("signature creation time invalid")
+	}
+
+	return nil
 }

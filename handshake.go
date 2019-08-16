@@ -1,3 +1,5 @@
+// Package ramble provides the structures used when communicating with a ramble
+// server.
 package ramble
 
 // HelloResponse is sent from the server indicating that it needs verification
