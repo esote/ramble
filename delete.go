@@ -1,5 +1,12 @@
 package ramble
 
+// TODO: these have no meaning yet
+const (
+	DeleteAll uint8 = iota
+	DeleteReceived
+	DeleteSent
+)
+
 // DeleteHelloReq is sent by the client as the initial request to delete stored
 // data.
 type DeleteHelloReq struct {
@@ -19,10 +26,3 @@ type DeleteVerifyReq VerifyRequest
 // DeleteVerifyResp is sent by the server in response to DeleteVerifyReq and
 // terminates the hello-verify handshake.
 type DeleteVerifyResp struct{}
-
-// TODO: these have no meaning yet
-const (
-	DeleteAll uint8 = iota
-	DeleteReceived
-	DeleteSent
-)

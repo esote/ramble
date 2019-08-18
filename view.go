@@ -19,14 +19,25 @@ type StoredMessage struct {
 	Time time.Time `json:"time"`
 }
 
+const (
+	// ViewConversations asks to view conversations the sender is a part of.
+	ViewConversations uint8 = iota
+
+	// ViewConvoMessages asks to view messages within a conversion.
+	ViewConvoMessages
+)
+
 // ViewHelloReq is sent by the client as the initial request to view a list of
 // stored messages.
 type ViewHelloReq struct {
+	// Count of how many messages to return.
+	Count int64 `json:"count"`
+
 	// Sender's public key fingerprint.
 	Sender string `json:"sender"`
 
-	// Count of how many messages to return.
-	Count int64 `json:"count"`
+	// Type of data to view, representing an enumerated type.
+	Type uint8 `json:"type"`
 }
 
 // ViewHelloResp is sent by the server in response to ViewHelloReq.

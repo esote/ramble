@@ -11,8 +11,8 @@ import (
 
 	"github.com/esote/util/splay"
 	"github.com/majiru/ramble"
-	"github.com/majiru/ramble/internal/cindex"
 	"github.com/majiru/ramble/internal/pgp"
+	"github.com/majiru/ramble/internal/table"
 	"github.com/majiru/ramble/internal/uuid"
 )
 
@@ -25,49 +25,53 @@ type verifyMeta struct {
 // Server is a ramble server tasked with storing public keys, encrypted
 // messages, and hello-verify handshakes.
 type Server struct {
-	dur    time.Duration
+	dur time.Duration
+
 	active map[string]verifyMeta
 
-	convo  *cindex.CIndex
-	msg    *splay.Splay
-	public *splay.Splay
+	msg     *splay.Splay
+	public  *splay.Splay
+	tconvos *table.Table
+	tmsgs   *table.Table
 
 	mu sync.Mutex
 }
 
 // NewServer creates a new server. dur is the duration that hello-verify
-// handshakes may remain active. convo is the directory conversation index
-// tables are stored. msg is the directory encrypted messages are stored. public
-// is the directory public keys are stored.
-func NewServer(dur time.Duration, convo, msg, public string) (*Server, error) {
-	ret := &Server{
+// handshakes may remain active.
+func NewServer(dur time.Duration) (server *Server, err error) {
+	server = &Server{
 		dur:    dur,
 		active: make(map[string]verifyMeta),
 	}
 
-	var err error
-
-	ret.convo, err = cindex.NewCIndex(convo, 2)
+	server.msg, err = splay.NewSplay("s_messages", 2)
 
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	ret.msg, err = splay.NewSplay(msg, 2)
+	server.public, err = splay.NewSplay("s_public_keys", 2)
 
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	ret.public, err = splay.NewSplay(public, 2)
+	server.tconvos, err = table.NewTable("s_table_convos", 2, uuid.LenUUID)
 
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	go ret.prune()
+	server.tmsgs, err = table.NewTable("s_table_msgs", 2, uuid.LenUUID)
 
-	return ret, nil
+	if err != nil {
+		return
+	}
+
+	go server.prune()
+
+	return
 }
 
 // Used as a globally-persisting goroutine to prune handshakes older than s.dur.

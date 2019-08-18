@@ -11,10 +11,26 @@ import (
 	"github.com/majiru/ramble/internal/uuid"
 )
 
+var reHex = regexp.MustCompile("^[a-fA-F0-9]+$")
+
 // SendHello processes the hello handshake step.
 func (s *Server) SendHello(req *ramble.SendHelloReq) (*ramble.SendHelloResp, error) {
 	if len(req.Recipients) == 0 {
 		return nil, errors.New("empty recipient list")
+	}
+
+	if req.Conversation == "" {
+		var err error
+		req.Conversation, err = uuid.UUID()
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(req.Conversation) != uuid.LenUUID ||
+		!reHex.MatchString(req.Conversation) {
+		return nil, errors.New("conversation UUID invalid")
 	}
 
 	if !pgp.VerifyHexFingerprint(req.Sender) {
@@ -51,8 +67,6 @@ func (s *Server) SendHello(req *ramble.SendHelloReq) (*ramble.SendHelloResp, err
 	return &ret, nil
 }
 
-var reHex = regexp.MustCompile("^[a-fA-F0-9]+$")
-
 // SendVerify processes the verify handshake step.
 func (s *Server) SendVerify(req *ramble.SendVerifyReq) (*ramble.SendVerifyResp, error) {
 	meta, err := s.verifyReq(req.UUID)
@@ -77,25 +91,13 @@ func (s *Server) SendVerify(req *ramble.SendVerifyReq) (*ramble.SendVerifyResp, 
 		return nil, err
 	}
 
-	// TODO: maybe force that messages can only be sent to recipients who
-	// have added their own public keys through the welcome process?
-
-	if hello.Conversation == "" {
-		hello.Conversation, err = uuid.UUID()
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if len(hello.Conversation) != uuid.LenUUID ||
-		!reHex.MatchString(hello.Conversation) {
-		return nil, errors.New("conversation UUID invalid")
-	}
-
-	msg, err := s.convo.Insert(hello.Conversation)
+	msg, err := uuid.UUID()
 
 	if err != nil {
+		return nil, err
+	}
+
+	if err = s.tmsgs.Insert(hello.Conversation, msg); err != nil {
 		return nil, err
 	}
 
@@ -103,8 +105,13 @@ func (s *Server) SendVerify(req *ramble.SendVerifyReq) (*ramble.SendVerifyResp, 
 		return nil, err
 	}
 
-	// TODO: store message metadata: recipients, sender, time sent.
-	// TODO: associate conversation UUIDs with public key fingerprint.
+	if err = s.tconvos.InsertUnique(hello.Sender, hello.Conversation); err != nil {
+		return nil, err
+	}
 
-	return new(ramble.SendVerifyResp), nil
+	// TODO: store message metadata: recipients, sender, time sent.
+
+	return &ramble.SendVerifyResp{
+		Conversation: hello.Conversation,
+	}, nil
 }

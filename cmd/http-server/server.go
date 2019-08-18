@@ -13,7 +13,7 @@ var srv *server.Server
 
 func main() {
 	var err error
-	srv, err = server.NewServer(time.Hour, "test_convo", "test_msg", "test_public")
+	srv, err = server.NewServer(time.Hour)
 
 	if err != nil {
 		log.Fatal(err)

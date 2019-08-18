@@ -26,4 +26,8 @@ type SendVerifyReq VerifyRequest
 
 // SendVerifyResp is sent by the server in response to SendVerifyReq and
 // terminates the hello-verify handshake.
-type SendVerifyResp struct{}
+type SendVerifyResp struct {
+	// Conversation UUID. If the hello request conversation UUID was empty,
+	// this UUID is for the new conversation.
+	Conversation string `json:"conv"`
+}
