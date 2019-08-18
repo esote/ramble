@@ -11,6 +11,7 @@ import (
 
 	"github.com/esote/util/splay"
 	"github.com/majiru/ramble"
+	"github.com/majiru/ramble/internal/cindex"
 	"github.com/majiru/ramble/internal/pgp"
 	"github.com/majiru/ramble/internal/uuid"
 )
@@ -26,27 +27,47 @@ type verifyMeta struct {
 type Server struct {
 	dur    time.Duration
 	active map[string]verifyMeta
+
+	convo  *cindex.CIndex
+	msg    *splay.Splay
 	public *splay.Splay
 
 	mu sync.Mutex
 }
 
 // NewServer creates a new server. dur is the duration that hello-verify
-// handshakes may remain active. publicDir is the directory public keys will be
-// stored in.
-func NewServer(dur time.Duration, publicDir string) (ret *Server, err error) {
-	ret = &Server{
+// handshakes may remain active. convo is the directory conversation index
+// tables are stored. msg is the directory encrypted messages are stored. public
+// is the directory public keys are stored.
+func NewServer(dur time.Duration, convo, msg, public string) (*Server, error) {
+	ret := &Server{
 		dur:    dur,
 		active: make(map[string]verifyMeta),
 	}
 
-	ret.public, err = splay.NewSplay(publicDir, 2)
+	var err error
 
-	if err == nil {
-		go ret.prune()
+	ret.convo, err = cindex.NewCIndex(convo, 2)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return
+	ret.msg, err = splay.NewSplay(msg, 2)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ret.public, err = splay.NewSplay(public, 2)
+
+	if err != nil {
+		return nil, err
+	}
+
+	go ret.prune()
+
+	return ret, nil
 }
 
 // Used as a globally-persisting goroutine to prune handshakes older than s.dur.

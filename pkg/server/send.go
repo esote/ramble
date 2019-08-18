@@ -3,10 +3,12 @@ package server
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/majiru/ramble"
 	"github.com/majiru/ramble/internal/pgp"
+	"github.com/majiru/ramble/internal/uuid"
 )
 
 // SendHello processes the hello handshake step.
@@ -49,6 +51,8 @@ func (s *Server) SendHello(req *ramble.SendHelloReq) (*ramble.SendHelloResp, err
 	return &ret, nil
 }
 
+var reHex = regexp.MustCompile("^[a-fA-F0-9]+$")
+
 // SendVerify processes the verify handshake step.
 func (s *Server) SendVerify(req *ramble.SendVerifyReq) (*ramble.SendVerifyResp, error) {
 	meta, err := s.verifyReq(req.UUID)
@@ -73,11 +77,34 @@ func (s *Server) SendVerify(req *ramble.SendVerifyReq) (*ramble.SendVerifyResp, 
 		return nil, err
 	}
 
-	// TODO: store hello.Message as part of (or creating) m.Conversation
-	// with the metadata hello.Recipients.
-
 	// TODO: maybe force that messages can only be sent to recipients who
 	// have added their own public keys through the welcome process?
+
+	if hello.Conversation == "" {
+		hello.Conversation, err = uuid.UUID()
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(hello.Conversation) != uuid.LenUUID ||
+		!reHex.MatchString(hello.Conversation) {
+		return nil, errors.New("conversation UUID invalid")
+	}
+
+	msg, err := s.convo.Insert(hello.Conversation)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = s.msg.Write(msg, []byte(hello.Message)); err != nil {
+		return nil, err
+	}
+
+	// TODO: store message metadata: recipients, sender, time sent.
+	// TODO: associate conversation UUIDs with public key fingerprint.
 
 	return new(ramble.SendVerifyResp), nil
 }
