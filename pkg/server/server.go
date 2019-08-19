@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/esote/util/splay"
+	"github.com/esote/util/table"
 	"github.com/majiru/ramble"
 	"github.com/majiru/ramble/internal/pgp"
-	"github.com/majiru/ramble/internal/table"
 	"github.com/majiru/ramble/internal/uuid"
 )
 
