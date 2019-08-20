@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/majiru/ramble"
+	"github.com/esote/ramble"
 )
 
 func handleDeleteHello(w http.ResponseWriter, r *http.Request) {

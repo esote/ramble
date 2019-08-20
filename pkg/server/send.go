@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/majiru/ramble"
-	"github.com/majiru/ramble/internal/pgp"
-	"github.com/majiru/ramble/internal/uuid"
+	"github.com/esote/ramble"
+	"github.com/esote/ramble/internal/pgp"
+	"github.com/esote/ramble/internal/uuid"
 )
 
 var reHex = regexp.MustCompile("^[a-fA-F0-9]+$")

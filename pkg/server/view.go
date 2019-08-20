@@ -5,9 +5,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/majiru/ramble"
-	"github.com/majiru/ramble/internal/pgp"
-	"github.com/majiru/ramble/internal/uuid"
+	"github.com/esote/ramble"
+	"github.com/esote/ramble/internal/pgp"
+	"github.com/esote/ramble/internal/uuid"
 )
 
 // ViewHello processes the hello handshake step.

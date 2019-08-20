@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/majiru/ramble"
+	"github.com/esote/ramble"
 )
 
 func welcomeHello() (uuid string, err error) {

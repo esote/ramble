@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/majiru/ramble"
+	"github.com/esote/ramble"
 )
 
 func sendHello() (uuid string, err error) {

@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/majiru/ramble"
+	"github.com/esote/ramble"
 )
 
 func request(path string, data []byte) ([]byte, error) {

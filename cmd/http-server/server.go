@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/majiru/ramble/pkg/server"
+	"github.com/esote/ramble/pkg/server"
 )
 
 var srv *server.Server
