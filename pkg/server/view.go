@@ -1,15 +1,24 @@
 package server
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 
 	"github.com/majiru/ramble"
 	"github.com/majiru/ramble/internal/pgp"
+	"github.com/majiru/ramble/internal/uuid"
 )
 
 // ViewHello processes the hello handshake step.
 func (s *Server) ViewHello(req *ramble.ViewHelloReq) (*ramble.ViewHelloResp, error) {
+	switch req.Type {
+	case ramble.ViewConversations, ramble.ViewMessages:
+		break
+	default:
+		return nil, errors.New("invalid type")
+	}
+
 	if !pgp.VerifyHexFingerprint(req.Sender) {
 		return nil, errors.New("sender fingerprint is invalid")
 	}
@@ -55,10 +64,53 @@ func (s *Server) ViewVerify(req *ramble.ViewVerifyReq) (*ramble.ViewVerifyResp, 
 		return nil, err
 	}
 
-	// TODO: return index of messages sent by user and sent to user
+	var buf bytes.Buffer
 
-	// TODO: this return definitely needs to be encrypted using their public
-	// key, so no one else can read the data.
+	switch hello.Type {
+	case ramble.ViewConversations:
+		convos, err := s.tconvos.IndexN(hello.Sender, hello.Count)
 
-	return new(ramble.ViewVerifyResp), nil
+		if err != nil {
+			return nil, err
+		}
+
+		buf.Grow(len(convos) * (uuid.LenUUID + 1))
+
+		for _, convo := range convos {
+			buf.WriteString(convo)
+			buf.Write([]byte{'\n'})
+		}
+	case ramble.ViewMessages:
+		msgs, err := s.tmsgs.IndexN(hello.Sender, hello.Count)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, msgUUID := range msgs {
+			msg, err := s.msg.Read(msgUUID)
+
+			if err != nil {
+				return nil, err
+			}
+
+			buf.Write(msg)
+			buf.Write([]byte{'\n'})
+		}
+	default:
+		return nil, errors.New("invalid type")
+	}
+
+	p := bytes.NewReader(public)
+	l := bytes.NewReader(buf.Bytes())
+
+	enc, err := pgp.EncryptArmored(p, l)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &ramble.ViewVerifyResp{
+		List: string(enc),
+	}, nil
 }

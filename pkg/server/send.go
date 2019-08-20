@@ -105,11 +105,19 @@ func (s *Server) SendVerify(req *ramble.SendVerifyReq) (*ramble.SendVerifyResp, 
 		return nil, err
 	}
 
-	if err = s.tconvos.InsertUnique(hello.Sender, hello.Conversation); err != nil {
+	err = s.tconvos.InsertUnique(hello.Sender, hello.Conversation)
+
+	if err != nil {
 		return nil, err
 	}
 
-	// TODO: store message metadata: recipients, sender, time sent.
+	for _, r := range hello.Recipients {
+		err = s.tconvos.InsertUnique(r, hello.Conversation)
+
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return &ramble.SendVerifyResp{
 		Conversation: hello.Conversation,

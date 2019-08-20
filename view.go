@@ -1,37 +1,19 @@
 package ramble
 
-import (
-	"time"
-)
-
-// StoredMessage is a message and its metadata.
-type StoredMessage struct {
-	// Conversation UUID.
-	Conversation string `json:"conv"`
-
-	// Encrypted message.
-	Message string `json:"msg"`
-
-	// Recipients' public key fingerprints.
-	Recipients []string `json:"recipients"`
-
-	// Time the message was sent.
-	Time time.Time `json:"time"`
-}
-
 const (
-	// ViewConversations asks to view conversations the sender is a part of.
+	// ViewConversations asks to view a list of conversations you are
+	// associated with.
 	ViewConversations uint8 = iota
 
-	// ViewConvoMessages asks to view messages within a conversion.
-	ViewConvoMessages
+	// ViewMessages asks to view a list messages within a conversion.
+	ViewMessages
 )
 
 // ViewHelloReq is sent by the client as the initial request to view a list of
 // stored messages.
 type ViewHelloReq struct {
-	// Count of how many messages to return.
-	Count int64 `json:"count"`
+	// Count of how many items to return, 0 for all.
+	Count uint64 `json:"count"`
 
 	// Sender's public key fingerprint.
 	Sender string `json:"sender"`
@@ -47,8 +29,9 @@ type ViewHelloResp HelloResponse
 type ViewVerifyReq VerifyRequest
 
 // ViewVerifyResp is sent by the server in response to ViewVerifyReq and
-// terminates the hello-verify handshake.
+// terminates the hello-verify handshake. The list items are encrypted with the
+// sender's public key in an amalgamated string using speculative key IDs.
 type ViewVerifyResp struct {
-	// Messages is a list of messages.
-	Messages []StoredMessage `json:"msgs"`
+	// List of data.
+	List string `json:"list"`
 }
