@@ -45,7 +45,7 @@ func (s *Server) SendHello(req *ramble.SendHelloReq) (*ramble.SendHelloResp, err
 				" is invalid", i)
 		}
 
-		r = strings.ToLower(r)
+		req.Recipients[i] = strings.ToLower(r)
 	}
 
 	msg := strings.NewReader(req.Message)

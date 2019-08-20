@@ -1,83 +1,85 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/majiru/ramble"
 )
 
-func main() {
-	s := bufio.NewScanner(os.Stdin)
+func request(path string, data []byte) ([]byte, error) {
+	uri, err := url.Parse(server + path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Post(uri.String(), "application/json",
+		bytes.NewReader(data))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
+func verify(path, uuid string) ([]byte, error) {
+	fmt.Println("Enter nonce detached signature:")
 
 	var b bytes.Buffer
 
-	for s.Scan() {
-		b.WriteString(s.Text() + "\n")
+	if _, err := b.ReadFrom(os.Stdin); err != nil {
+		return nil, err
 	}
 
-	helloReq := ramble.WelcomeHelloReq{
-		Public: b.String(),
-	}
-
-	j, err := json.Marshal(&helloReq)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	resp, err := http.Post("http://localhost:8080/welcome/hello", "application/json", bytes.NewReader(j))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	var helloResp ramble.WelcomeHelloResp
-
-	if err = json.Unmarshal(body, &helloResp); err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(helloResp.Nonce)
-
-	b.Reset()
-	s = bufio.NewScanner(os.Stdin)
-
-	for s.Scan() {
-		b.WriteString(s.Text() + "\n")
-	}
-
-	verifyReq := ramble.WelcomeVerifyReq{
+	req := ramble.VerifyRequest{
 		Signature: b.String(),
-		UUID:      helloResp.UUID,
+		UUID:      uuid,
 	}
 
-	j, err = json.Marshal(&verifyReq)
+	data, err := json.Marshal(&req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return request(path, data)
+}
+
+var server string
+
+func main() {
+	server = "http://localhost:8080"
+
+	uuid, err := welcomeHello()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	resp, err = http.Post("http://localhost:8080/welcome/verify", "application/json", bytes.NewReader(j))
+	if err = welcomeVerify(uuid); err != nil {
+		log.Fatal(err)
+	}
+
+	uuid, err = sendHello()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	body, err = ioutil.ReadAll(resp.Body)
-
-	if err != nil {
+	if err = sendVerify(uuid); err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("%+v\n", resp)
-	fmt.Println(string(body))
 }

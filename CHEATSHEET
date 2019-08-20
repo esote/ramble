@@ -1,0 +1,16 @@
+// TODO: combine with README later on
+
+Print public key
+	plain:	gpg --export --armored [NAME]
+	xclip:	gpg --export --armored [NAME] | xclip -selection c
+
+Print public key fingerprints
+	plain:	gpg --list-keys --fingerprint
+
+Sign with detached signature
+	plain:	gpg --detach-sign --armor [DOC]
+	xclip:	xclip -o | gpg --detach-sign --armor | xclip -selection c
+
+Encrypt document
+	plain:	gpg --output [DOC] --encrypt --armor --hidden-recipient [RECIPIENT] [DOC]
+	xclip:	xclip -o | gpg --encrypt --armor --hidden-recipient [RECIPIENT] | xclip -selection c
