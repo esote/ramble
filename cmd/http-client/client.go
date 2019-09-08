@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -58,28 +61,84 @@ func verify(path, uuid string) ([]byte, error) {
 	return request(path, data)
 }
 
+func shell() error {
+	fmt.Println("cmds: d/h/q/s/v/w")
+
+	const help = `d, delete
+	Request to delete data from ramble server.
+h, help
+	Print this help.
+q, quit
+	Exit this client.
+s, send
+	Send a message.
+v, view
+	View messages.
+w, welcome
+	Introduce yourself to the server.`
+
+	b := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("> ")
+
+		input, _, err := b.ReadLine()
+
+		if err == io.EOF {
+			fmt.Println()
+			return nil
+		} else if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			continue
+		}
+
+		input = bytes.TrimSpace(input)
+
+		if len(input) == 0 {
+			continue
+		}
+
+		var uuid string
+
+		switch string(input) {
+		case "d", "delete":
+			fmt.Println("not implemented yet")
+		case "h", "help":
+			fmt.Println(help)
+		case "q", "quit":
+			return nil
+		case "s", "send":
+			uuid, err = sendHello()
+
+			if err == nil {
+				err = sendVerify(uuid)
+			}
+		case "v", "view":
+			fmt.Println("not implemented yet")
+		case "w", "welcome":
+			uuid, err = welcomeHello()
+
+			if err == nil {
+				err = welcomeVerify(uuid)
+			}
+		default:
+			fmt.Fprintf(os.Stderr, "'%s' is an invalid option\n",
+				input)
+		}
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}
+}
+
 var server string
 
 func main() {
-	server = "http://localhost:8080"
+	flag.StringVar(&server, "server", "http://localhost:8080", "server URL")
+	flag.Parse()
 
-	uuid, err := welcomeHello()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err = welcomeVerify(uuid); err != nil {
-		log.Fatal(err)
-	}
-
-	uuid, err = sendHello()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err = sendVerify(uuid); err != nil {
+	if err := shell(); err != nil {
 		log.Fatal(err)
 	}
 }
