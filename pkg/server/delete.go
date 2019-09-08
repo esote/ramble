@@ -51,7 +51,22 @@ func (s *Server) DeleteVerify(req *ramble.DeleteVerifyReq) (*ramble.DeleteVerify
 		return nil, err
 	}
 
-	// TODO: delete things based on hello.Type
+	switch hello.Type {
+	case ramble.DeleteAll:
+		err = s.public.Remove(hello.Sender)
+
+		if err == nil {
+			err = s.tconvos.Splay.Remove(hello.Sender)
+		}
+	case ramble.DeletePublic:
+		err = s.public.Remove(hello.Sender)
+	case ramble.DeleteConversations:
+		err = s.tconvos.Splay.Remove(hello.Sender)
+	}
+
+	if err != nil {
+		return nil, err
+	}
 
 	return new(ramble.DeleteVerifyResp), nil
 }

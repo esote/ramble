@@ -3,8 +3,8 @@ package ramble
 // TODO: these have no meaning yet
 const (
 	DeleteAll uint8 = iota
-	DeleteReceived
-	DeleteSent
+	DeletePublic
+	DeleteConversations
 )
 
 // DeleteHelloReq is sent by the client as the initial request to delete stored
