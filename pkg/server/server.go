@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/esote/util/splay"
-	"github.com/esote/util/table"
 	"github.com/esote/ramble"
 	"github.com/esote/ramble/internal/pgp"
 	"github.com/esote/ramble/internal/uuid"
+	"github.com/esote/util/splay"
+	"github.com/esote/util/table"
 )
 
 type verifyMeta struct {

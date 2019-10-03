@@ -214,6 +214,10 @@ func VerifyPublicArmored(input io.Reader) (bool, error) {
 
 	p, err := packet.NewReader(blk.Body).Next()
 
+	if err != nil {
+		return false, err
+	}
+
 	switch p.(type) {
 	case *packet.PublicKey:
 		return true, nil
